@@ -7,7 +7,7 @@ COPY ./package.json /app
 
 COPY ./yarn.lock /app
 
-RUN yarn
+RUN yarn --frozen-lockfile
 
 COPY . /app
 
@@ -22,7 +22,7 @@ COPY /service/package.json /app
 
 COPY /service/yarn.lock /app
 
-RUN yarn
+RUN yarn --frozen-lockfile
 
 COPY /service /app
 
