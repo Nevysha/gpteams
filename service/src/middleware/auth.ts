@@ -29,7 +29,6 @@ export async function isAuthenticated(decodedToken: DecodedIdToken) {
     return false
 
   const whitelistRegex = whitelist.map((item: string) => generateRegExp(item))
-  globalThis.console.log(whitelistRegex)
 
   if (!whitelistRegex.some((item: RegExp) => item.test(decodedToken.email) || item.test(decodedToken.phone_number)))
     return false

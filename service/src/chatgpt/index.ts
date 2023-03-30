@@ -99,8 +99,6 @@ async function chatReplyProcess(options: RequestOptions) {
       }
     }
 
-    console.log(options)
-
     const response = await chatGptApi.sendMessage(message, options)
 
     return sendResponse({ type: 'Success', data: response })
