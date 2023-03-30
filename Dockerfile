@@ -1,28 +1,44 @@
 # build front-end
-FROM node:lts-alpine AS builder
+FROM node:lts-alpine AS frontend
 
-COPY ./ /app
 WORKDIR /app
 
-RUN apk add --no-cache git \
-    && npm install pnpm -g \
-    && pnpm install \
-    && pnpm run build \
-    && rm -rf /root/.npm /root/.pnpm-store /usr/local/share/.cache /tmp/*
+COPY ./package.json /app
+
+COPY ./yarn.lock /app
+
+RUN yarn
+
+COPY . /app
+
+RUN yarn build
+
+# build backend
+FROM node:lts-alpine as backend
+
+WORKDIR /app
+
+COPY /service/package.json /app
+
+COPY /service/yarn.lock /app
+
+RUN yarn
+
+COPY /service /app
+
+RUN yarn build
 
 # service
 FROM node:lts-alpine
 
-COPY /service /app
-COPY --from=builder /app/dist /app/public
-
 WORKDIR /app
-RUN apk add --no-cache git \
-    && npm install pnpm -g \
-    && pnpm install --only=production \
-    && rm -rf /root/.npm /root/.pnpm-store /usr/local/share/.cache /tmp/*
 
+COPY --from=frontend /app/dist /app/public
+
+COPY --from=backend /app/package.json /app
+COPY --from=backend /app/node_modules /app/node_modules
+COPY --from=backend /app/build /app/build
 
 EXPOSE 3002
 
-CMD ["pnpm", "run", "start"]
+CMD ["yarn", "run", "prod"]
