@@ -5,8 +5,10 @@ import { ChatGPTAPI } from 'chatgpt'
 import { SocksProxyAgent } from 'socks-proxy-agent'
 import httpsProxyAgent from 'https-proxy-agent'
 import fetch from 'node-fetch'
-import { sendResponse } from '../utils'
-import type { ChatContext, ModelConfig } from '../types'
+import type { RequestOptions } from './types'
+import { sendResponse } from '~/utils'
+import type { ChatContext, ModelConfig } from '~/types'
+import { isNotEmptyString } from '~/utils/is'
 import { adminConfigRef } from '~/firebaseAdmin'
 
 const ErrorCodeMessage: Record<string, string> = {
@@ -32,7 +34,7 @@ const model = (typeof OPENAI_API_MODEL === 'string' && OPENAI_API_MODEL.length >
 const chatGptApiOptions: ChatGPTAPIOptions = {
   apiKey: '',
   completionParams: { model },
-  debug: false,
+  debug: true,
 }
 
 if (process.env.OPENAI_API_BASE_URL && process.env.OPENAI_API_BASE_URL.trim().length > 0)
@@ -79,26 +81,27 @@ export async function updateChatgptModel(model: string) {
   chatGptApi = new ChatGPTAPI(chatGptApiOptions)
 }
 
-async function chatReplyProcess(
-  message: string,
-  lastContext?: { conversationId?: string; parentMessageId?: string },
-  process?: (chat: ChatMessage) => void,
-) {
-  // if (!message)
-  //   return sendResponse({ type: 'Fail', message: 'Message is empty' })
-
+async function chatReplyProcess(options: RequestOptions) {
+  const { message, lastContext, process, systemMessage } = options
   try {
     let options: SendMessageOptions = { timeoutMs }
 
     if (lastContext)
-      options = { parentMessageId: lastContext.parentMessageId }
+      options.parentMessageId = lastContext.parentMessageId
 
-    const response = await chatGptApi.sendMessage(message, {
+    if (isNotEmptyString(systemMessage))
+      options.systemMessage = systemMessage
+
+    options = {
       ...options,
       onProgress: (partialResponse) => {
         process?.(partialResponse)
-      },
-    })
+      }
+    }
+
+    console.log(options)
+
+    const response = await chatGptApi.sendMessage(message, options)
 
     return sendResponse({ type: 'Success', data: response })
   }

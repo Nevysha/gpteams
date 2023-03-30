@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import { NModal, NTabPane, NTabs } from 'naive-ui'
 import General from './General.vue'
+import Advanced from './Advanced.vue'
 import { SvgIcon } from '@/components/common'
 
 interface Props {
@@ -39,6 +40,15 @@ const show = computed({
           </template>
           <div class="min-h-[100px]">
             <General />
+          </div>
+        </NTabPane>
+        <NTabPane name="Advanced" tab="Advanced">
+          <template #tab>
+            <SvgIcon class="text-lg" icon="ri:equalizer-line" />
+            <span class="ml-2">{{ $t('setting.advanced') }}</span>
+          </template>
+          <div class="min-h-[100px]">
+            <Advanced />
           </div>
         </NTabPane>
       </NTabs>
